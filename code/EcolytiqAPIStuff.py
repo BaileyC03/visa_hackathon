@@ -1,79 +1,122 @@
+## NOT IN USE
 import requests
 from requests.auth import HTTPBasicAuth
+from datetime import datetime, timedelta
 
-#Our credentials
-clientID = "8xhnfmUlVHPdhYYLw6m3rD3UIDU4egH69bGw"
-clientSecret = "ZTF8O94xdl1wVG7dJgpqxHYUzbhOCuo6TrZ2UB1qPSl1HNRR"
-tokenUrl = "https://api.staging.ecolytiq.arm.ecolytiq.network/oauth/token"
+# Define credentials and URLs
+client_id = '8xhnfmUlVHPdhYYLw6m3rD3UIDU4egH69bGw'
+client_secret = 'ZTF8O94xdl1wVG7dJgpqxHYUzbhOCuo6TrZ2UB1qPSl1HNRR'
+token_url = 'https://api.staging.ecolytiq.arm.ecolytiq.network/oauth/token'
 
-#Access token request
-response = requests.post( tokenUrl,
-    auth=HTTPBasicAuth(clientID, clientSecret),
-    data={
-        'grant_type': 'client_credentials',
-        'scope': 'all'
-    }
-)
-
-#Checking if request is successful:
-if response.status_code == 200:
-    access_token = response.json()['access_token']
-    print("Token request successful!")
-    print("Access Token:", access_token)
-else:
-    print("Failed to get access token:", response.json())
-
-#Test transaction data. Please change to the data later
-transaction_data = {
-    "transactions": [
-        {
-            "transaction_id": "62c12ecc-17d7-469f-9ecc-b08e00eb8c90",
-            "account_id": "a083e879-b37c-4307-9407-a9825d82800b",
-            "category": {
-                "system": "ECOLYTIQ_V2",
-                "value": "ex:transport.flight"
-            },
-            "co2_model": "DE",
-            "amount": {
-                "value": -2854,
-                "currency_code": "EUR"
-            },
-            "datetime": "2022-05-15T14:18:34Z"
-        },
-        {
-            "transaction_id": "fa2e6d26-fb0f-49f5-bc8d-ccedbc1ca084",
-            "account_id": "a083e879-b37c-4307-9407-a9825d82800b",
-            "category": {
-                "system": "ECOLYTIQ_V2",
-                "value": "ex:transport.servicestations"
-            },
-            "amount": {
-                "value": -192.6,
-                "currency_code": "EUR"
-            },
-            "co2_model": "DE",
-            "datetime": "2022-09-05T11:18:34Z"
-        }
-    ]
-}
-
-#Sending transaction data
-apiUrl = 'https://api.staging.ecolytiq.arm.ecolytiq.network/transactions/v1/transactions'
-response = requests.post(
-    apiUrl,
-    headers={
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
+# Dummy transactions
+transactions = [
+    {
+        "Name": "transactions",
+        "Value.accountId": "5a73582adf954cf6b3db6cc97bedccd9",
+        "cluster_name_adjusted": "Affluent Segment",
+        "Value.amount.currencyCode": "GBP",
+        "mrch_catg_rlup_nm2": "AMUSEMENT PARKS/CIRCUS",
+        "Value.dates.booked": "5/12/2023",
+        "amount": 3.73,
+        "Category": "entertainment"
     },
-    json=transaction_data
-)
+    {
+        "Name": "transactions",
+        "Value.accountId": "5a73582adf954cf6b3db6cc97bedccd9",
+        "cluster_name_adjusted": "Affluent Segment",
+        "Value.amount.currencyCode": "GBP",
+        "mrch_catg_rlup_nm2": "AMUSEMENT PARKS/CIRCUS",
+        "Value.dates.booked": "5/12/2023",
+        "amount": 3.73,
+        "Category": "entertainment"
+    },
+    # Add more transactions as needed...
+]
 
-# Check if the request was successful
-if response.status_code == 200:
-    transaction_result = response.json()
-    print("Transaction Result:", transaction_result)
-else:
-    print("Failed to send transaction:", response.json())
+
+# Function to get access token
+def get_access_token(client_id, client_secret, token_url):
+    response = requests.post(
+        token_url,
+        auth=HTTPBasicAuth(client_id, client_secret),
+        data={
+            'grant_type': 'client_credentials',
+            'scope': 'all'
+        }
+    )
+
+    if response.status_code == 200:
+        return response.json()['access_token']
+    else:
+        raise Exception(f"Failed to get access token: {response.text}")
 
 
+# Function to get average footprints
+def get_average_footprint(access_token, account_id):
+    avg_footprints_url = 'https://api.staging.ecolytiq.arm.ecolytiq.network/footprints/v1/averages'
+    params = {
+        'account_id': account_id
+    }
 
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.get(
+        avg_footprints_url,
+        headers=headers,
+        params=params
+    )
+
+    if response.status_code == 200:
+        result = response.json()
+        average_footprint = result.get('footprint')
+        return average_footprint
+    else:
+        raise Exception(f"Failed to get average footprint: {response.text}")
+
+
+# Function to get footprints by category
+def get_footprints_by_category(access_token, account_id, month, transactions):
+    footprints_url = 'https://api.sandbox.arm.ecolytiq.network/statistic/v1/footprints/averages'
+    params = {}
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    # Prepare payload from transactions
+    payload = {
+        "transactions": transactions
+    }
+
+    response = requests.post(
+        footprints_url,
+        headers=headers,
+        json=payload
+    )
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to get footprints by category: {response.text}")
+
+
+##############################
+
+try:
+    access_token = get_access_token(client_id, client_secret, token_url)
+    print("Access Token:", access_token)
+
+    account_id = '5a73582adf954cf6b3db6cc97bedccd9'
+    month = '2023-05'
+
+    # Fetch average footprint
+    average_footprint = get_average_footprint(access_token, account_id)
+    print("Average Footprint:", average_footprint)
+
+    # Optionally, fetch footprints by category using transactions
+    footprints_by_category = get_footprints_by_category(access_token, account_id, month, transactions)
+    print("Footprints by Category:", footprints_by_category)
+
+except Exception as e:
+    print(str(e))

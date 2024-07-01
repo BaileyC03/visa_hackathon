@@ -1,8 +1,8 @@
 import pandas as pd
 
-def overall_score(cluster_name_adjusted):
+def get_public_vs_private(cluster_name_adjusted):
     # Read the data from the CSV file
-    data = pd.read_csv('..\data\Visa Climate Tech Data.xlsx - 2_Card data.csv')
+    data = pd.read_csv('data\Visa Climate Tech Data.xlsx - 2_Card data.csv')
 
 
     transportation = ['PARKING LOTS,METERS,GARAGES', 'PASSENGER RAILWAYS', 'TAXICABS/LIMOUSINES', 'BUS LINES', 'TAX PAYMENTS', 'UTILITIES/ELEC/GAS/H2O/SANI', 'SERVICE STATIONS', 'COMMERCIAL EQUIPMENT - DEFAULT', 'LOCAL COMMUTER TRANSPORT']
@@ -38,3 +38,15 @@ def overall_score(cluster_name_adjusted):
     total_private_transport_spent = private_transport_data['spend'].sum()
     
     return total_public_transport_spent, total_private_transport_spent
+
+#if name is main, run the code
+if __name__ == '__main__':
+    data = pd.read_csv('data\Visa Climate Tech Data.xlsx - 2_Card data.csv')
+
+    data = data['cluster_name_adjusted'].unique()
+    public_vs_private_spent = {}
+
+    for cluster_name_adjusted in data:
+        public_vs_private_spent[cluster_name_adjusted] = get_public_vs_private(cluster_name_adjusted)
+
+    print(public_vs_private_spent)

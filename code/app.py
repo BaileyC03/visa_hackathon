@@ -1,7 +1,6 @@
 from flask import Flask #Flask, web dev stuff
 from views import views #Template usage
 
-#Code
 app = Flask(__name__)
 app.register_blueprint(views, url_prefix='/')
 

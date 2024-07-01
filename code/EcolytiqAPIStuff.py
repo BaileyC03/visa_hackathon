@@ -1,5 +1,7 @@
+## NOT IN USE
 import requests
 from requests.auth import HTTPBasicAuth
+from datetime import datetime, timedelta
 
 # Define credentials and URLs
 client_id = '8xhnfmUlVHPdhYYLw6m3rD3UIDU4egH69bGw'
@@ -28,8 +30,9 @@ transactions = [
         "amount": 3.73,
         "Category": "entertainment"
     },
-   # Add more transactions as needed...
+    # Add more transactions as needed...
 ]
+
 
 # Function to get access token
 def get_access_token(client_id, client_secret, token_url):
@@ -48,9 +51,34 @@ def get_access_token(client_id, client_secret, token_url):
         raise Exception(f"Failed to get access token: {response.text}")
 
 
+# Function to get average footprints
+def get_average_footprint(access_token, account_id):
+    avg_footprints_url = 'https://api.staging.ecolytiq.arm.ecolytiq.network/footprints/v1/averages'
+    params = {
+        'account_id': account_id
+    }
+
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.get(
+        avg_footprints_url,
+        headers=headers,
+        params=params
+    )
+
+    if response.status_code == 200:
+        result = response.json()
+        average_footprint = result.get('footprint')
+        return average_footprint
+    else:
+        raise Exception(f"Failed to get average footprint: {response.text}")
+
+
 # Function to get footprints by category
 def get_footprints_by_category(access_token, account_id, month, transactions):
-    footprints_url = f'https://api.sandbox.arm.ecolytiq.network/statistic/v1/accounts/{account_id}/months/{month}/footprints'
+    footprints_url = 'https://api.sandbox.arm.ecolytiq.network/statistic/v1/footprints/averages'
     params = {}
     headers = {
         'Authorization': f'Bearer {access_token}'
@@ -70,9 +98,7 @@ def get_footprints_by_category(access_token, account_id, month, transactions):
     if response.status_code == 200:
         return response.json()
     else:
-        print(response.status_code)
         raise Exception(f"Failed to get footprints by category: {response.text}")
-        #It always does this
 
 
 ##############################
@@ -84,9 +110,13 @@ try:
     account_id = '5a73582adf954cf6b3db6cc97bedccd9'
     month = '2023-05'
 
+    # Fetch average footprint
+    average_footprint = get_average_footprint(access_token, account_id)
+    print("Average Footprint:", average_footprint)
+
+    # Optionally, fetch footprints by category using transactions
     footprints_by_category = get_footprints_by_category(access_token, account_id, month, transactions)
     print("Footprints by Category:", footprints_by_category)
 
 except Exception as e:
     print(str(e))
-
